@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="impact-site-verification" value="db69ce95-3897-4b3e-a469-6c0a6e96b619" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ampfora · A key for you</title>
+  <meta name="description" content="Someone left you a code on Ampfora. Claim it here." />
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#F1ECE1" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Ampfora home">
+      <img class="brand-mark" src="ampfora-mark.svg" alt="" width="30" height="30" />
+      <img class="brand-wordmark" src="ampfora-wordmark.svg" alt="Ampfora" height="18" />
+    </a>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <p class="eyebrow">A key for you</p>
+      <h1 id="claim-title">You’ve been let in.</h1>
+      <p class="lede" id="claim-lede">Someone shared a private collection with you, or dared you to a duel. Either way, this code opens the door.</p>
+
+      <div class="claim-card" id="claim-card" hidden>
+        <p class="claim-label">YOUR CODE</p>
+        <p class="claim-code" id="claim-code"></p>
+        <button class="btn btn-ghost claim-copy" id="copy-btn" type="button">Copy the code</button>
+      </div>
+
+      <div class="claim-steps">
+        <p class="claim-step"><span class="claim-n">1</span> Get Ampfora below (or open it, if she’s already on your phone).</p>
+        <p class="claim-step"><span class="claim-n">2</span> Sign in with Apple or Google.</p>
+        <p class="claim-step"><span class="claim-n">3</span> Enter your code: for a collection, it’s the You tab, then Shared with you. For a duel, it’s the ring: Have a challenge code?</p>
+      </div>
+
+      <div class="cta-row">
+        <a class="btn btn-solid" href="https://testflight.apple.com/join/REPLACE_WITH_YOUR_CODE">Get Ampfora</a>
+        <a class="btn btn-ghost" id="open-app" href="valtzie://" hidden>I have Ampfora · Open it</a>
+      </div>
+      <p class="cta-note">iPhone · private beta · Ampfora never posts anything, anywhere.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span class="copy">© 2026 Reach Mobile, LLC</span>
+    <nav>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+    </nav>
+  </footer>
+
+  <script>
+    // The code rides the URL FRAGMENT (#CODE): fragments never leave the browser, so a
+    // claim code cannot land in server or CDN logs. No code in the URL? The page still
+    // works as a plain explainer.
+    (function () {
+      var code = decodeURIComponent((location.hash || '').replace(/^#/, '')).trim();
+      if (!code) return;
+      var card = document.getElementById('claim-card');
+      var codeEl = document.getElementById('claim-code');
+      var openBtn = document.getElementById('open-app');
+      var copyBtn = document.getElementById('copy-btn');
+      codeEl.textContent = code;
+      card.hidden = false;
+      // Deep-link attempt for phones that already have Ampfora (harmless elsewhere).
+      openBtn.href = 'valtzie://claim/' + encodeURIComponent(code);
+      openBtn.hidden = false;
+      copyBtn.addEventListener('click', function () {
+        var done = function () {
+          copyBtn.textContent = 'Copied ✓';
+          setTimeout(function () { copyBtn.textContent = 'Copy the code'; }, 2000);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(done, done);
+        } else {
+          var r = document.createRange();
+          r.selectNodeContents(codeEl);
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(r);
+          try { document.execCommand('copy'); } catch (e) { /* she can long-press */ }
+          sel.removeAllRanges();
+          done();
+        }
+      });
+    })();
+  </script>
+
+</body>
+</html>
