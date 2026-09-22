@@ -35,17 +35,20 @@
         <button class="btn btn-ghost claim-copy" id="copy-btn" type="button">Copy the code</button>
       </div>
 
-      <div class="claim-steps">
-        <p class="claim-step"><span class="claim-n">1</span> Get Ampfora below (or open it, if she’s already on your phone).</p>
+      <div class="claim-steps" id="claim-steps">
+        <p class="claim-step"><span class="claim-n">1</span> Get Ampfora below (or open it, if it’s already on your phone).</p>
         <p class="claim-step"><span class="claim-n">2</span> Sign in with Apple or Google.</p>
         <p class="claim-step"><span class="claim-n">3</span> Enter your code: for a collection, it’s the You tab, then Shared with you. For a duel, it’s the ring: Have a challenge code?</p>
       </div>
 
+      <!-- WITH A CODE, "Open it" IS THE PRIMARY ACTION and the script promotes it. The page
+           used to lead with Get Ampfora and keep the open button hidden and ghosted below
+           it, so a recipient who already had the app was pointed at an install. -->
       <div class="cta-row">
-        <a class="btn btn-solid" href="https://testflight.apple.com/join/REPLACE_WITH_YOUR_CODE">Get Ampfora</a>
-        <a class="btn btn-ghost" id="open-app" href="valtzie://" hidden>I have Ampfora · Open it</a>
+        <a class="btn btn-ghost" id="open-app" href="valtzie://" hidden>Open in Ampfora</a>
+        <a class="btn btn-solid" id="get-app" href="https://testflight.apple.com/join/REPLACE_WITH_YOUR_CODE">Get Ampfora</a>
       </div>
-      <p class="cta-note">iPhone · private beta · Ampfora never posts anything, anywhere.</p>
+      <p class="cta-note" id="cta-note">iPhone · private beta · Ampfora never posts anything, anywhere.</p>
     </section>
   </main>
 
@@ -67,12 +70,43 @@
       var card = document.getElementById('claim-card');
       var codeEl = document.getElementById('claim-code');
       var openBtn = document.getElementById('open-app');
+      var getBtn = document.getElementById('get-app');
       var copyBtn = document.getElementById('copy-btn');
       codeEl.textContent = code;
       card.hidden = false;
-      // Deep-link attempt for phones that already have Ampfora (harmless elsewhere).
-      openBtn.href = 'valtzie://claim/' + encodeURIComponent(code);
+
+      // WHICH DOOR. A challenge marks itself with ?r=duel; anything else is an invite to a
+      // collection. Sending a rivalry code to the collection screen would fail there having
+      // consumed nothing and explained less.
+      var isDuel = /(?:^|[?&])r=duel(?:&|$)/i.test(location.search || '');
+      openBtn.href = 'valtzie://' + (isDuel ? 'duel/' : 'claim/') + encodeURIComponent(code);
       openBtn.hidden = false;
+      // The open button is the point of the page when a code is present: make it the solid
+      // one and demote the install beside it.
+      openBtn.className = 'btn btn-solid';
+      openBtn.textContent = isDuel ? 'Open the ring' : 'Open the collection';
+      if (getBtn) getBtn.className = 'btn btn-ghost';
+      if (isDuel) {
+        document.getElementById('claim-title').textContent = 'You’ve been dared.';
+        document.getElementById('claim-lede').textContent =
+          'Someone picked a piece and bet it outruns yours this month. The market referees. Pick your champion and the ring opens.';
+      } else {
+        document.getElementById('claim-title').textContent = 'You’ve been let in.';
+        document.getElementById('claim-lede').textContent =
+          'Someone shared a private collection with you. This opens it.';
+      }
+      // The steps are the fallback, not the instructions: they matter only if the button
+      // does nothing, which on iOS means the app is not installed yet.
+      var steps = document.getElementById('claim-steps');
+      if (steps) steps.hidden = true;
+      var note = document.getElementById('cta-note');
+      // HONEST ABOUT THE INSTALL PATH. iOS carries nothing from the App Store into a fresh
+      // launch, so a recipient who installs from here has to come back to this message and
+      // tap again. Saying so costs one sentence; not saying so costs the invite.
+      if (note) {
+        note.textContent =
+          'iPhone · private beta. Installing? Come back to this link afterwards and tap Open, or paste the code above.';
+      }
       copyBtn.addEventListener('click', function () {
         var done = function () {
           copyBtn.textContent = 'Copied ✓';
