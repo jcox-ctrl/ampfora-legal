@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ampfora · A key for you</title>
+  <meta name="description" content="Someone left you a code on Ampfora. Claim it here." />
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#F1ECE1" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Ampfora home">
+      <img class="brand-mark" src="ampfora-mark.svg" alt="" width="30" height="30" />
+      <img class="brand-wordmark" src="ampfora-wordmark.svg" alt="Ampfora" height="18" />
+    </a>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <p class="eyebrow">A key for you</p>
+      <h1 id="claim-title">You’ve been let in.</h1>
+      <p class="lede" id="claim-lede">Someone shared a private collection with you, or dared you to a duel. Either way, this code opens the door.</p>
+
+      <div class="claim-card" id="claim-card" hidden>
+        <p class="claim-label">YOUR CODE</p>
+        <p class="claim-code" id="claim-code"></p>
+        <button class="btn btn-ghost claim-copy" id="copy-btn" type="button">Copy the code</button>
+      </div>
+
+      <div class="claim-steps" id="claim-steps">
+        <p class="claim-step"><span class="claim-n">1</span> Get Ampfora below (or open it, if it’s already on your phone).</p>
+        <p class="claim-step"><span class="claim-n">2</span> Sign in with Apple or Google.</p>
+        <p class="claim-step"><span class="claim-n">3</span> Enter your code: for a collection, it’s the You tab, then Shared with you. For a duel, it’s the ring: Have a challenge code?</p>
+      </div>
+
+      <!-- WITH A CODE, "Open it" IS THE PRIMARY ACTION and the script promotes it. The page
+           used to lead with Get Ampfora and keep the open button hidden and ghosted below
+           it, so a recipient who already had the app was pointed at an install. -->
+      <div class="cta-row">
+        <a class="btn btn-ghost" id="open-app" href="valtzie://" hidden>Open in Ampfora</a>
+        <a class="btn btn-solid" id="get-app" href="https://testflight.apple.com/join/Nak8bquG">Get Ampfora</a>
+      </div>
+      <p class="cta-note" id="cta-note">iPhone · private beta · Ampfora never posts anything, anywhere.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span class="copy">© 2026 Reach Mobile, LLC</span>
+    <nav>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+    </nav>
+  </footer>
+
+  <script>
+    // The code rides the URL FRAGMENT (#CODE): fragments never leave the browser, so a
+    // claim code cannot land in server or CDN logs. No code in the URL? The page still
+    // works as a plain explainer.
+    (function () {
+      var code = decodeURIComponent((location.hash || '').replace(/^#/, '')).trim();
+      if (!code) return;
+      var card = document.getElementById('claim-card');
+      var codeEl = document.getElementById('claim-code');
+      var openBtn = document.getElementById('open-app');
+      var getBtn = document.getElementById('get-app');
+      var copyBtn = document.getElementById('copy-btn');
+      codeEl.textContent = code;
+      card.hidden = false;
+
+      // WHICH DOOR. A challenge marks itself with ?r=duel; anything else is an invite to a
+      // collection. Sending a rivalry code to the collection screen would fail there having
+      // consumed nothing and explained less.
+      var isDuel = /(?:^|[?&])r=duel(?:&|$)/i.test(location.search || '');
+      openBtn.href = 'valtzie://' + (isDuel ? 'duel/' : 'claim/') + encodeURIComponent(code);
+      openBtn.hidden = false;
+      // The open button is the point of the page when a code is present: make it the solid
+      // one and demote the install beside it.
+      openBtn.className = 'btn btn-solid';
+      openBtn.textContent = isDuel ? 'Open the ring' : 'Open the collection';
+      if (getBtn) getBtn.className = 'btn btn-ghost';
+      if (isDuel) {
+        document.getElementById('claim-title').textContent = 'You’ve been dared.';
+        document.getElementById('claim-lede').textContent =
+          'Someone picked a piece and bet it outruns yours this month. The market referees. Pick your champion and the ring opens.';
+      } else {
+        document.getElementById('claim-title').textContent = 'You’ve been let in.';
+        document.getElementById('claim-lede').textContent =
+          'Someone shared a private collection with you. This opens it.';
+      }
+      // The steps are the fallback, not the instructions: they matter only if the button
+      // does nothing, which on iOS means the app is not installed yet.
+      var steps = document.getElementById('claim-steps');
+      if (steps) steps.hidden = true;
+      var note = document.getElementById('cta-note');
+      // HONEST ABOUT THE INSTALL PATH. iOS carries nothing from the App Store into a fresh
+      // launch, so a recipient who installs from here has to come back to this message and
+      // tap again. Saying so costs one sentence; not saying so costs the invite.
+      if (note) {
+        note.textContent =
+          'iPhone · private beta. Installing? Come back to this link afterwards and tap Open, or paste the code above.';
+      }
+      copyBtn.addEventListener('click', function () {
+        var done = function () {
+          copyBtn.textContent = 'Copied ✓';
+          setTimeout(function () { copyBtn.textContent = 'Copy the code'; }, 2000);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(done, done);
+        } else {
+          var r = document.createRange();
+          r.selectNodeContents(codeEl);
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(r);
+          try { document.execCommand('copy'); } catch (e) { /* she can long-press */ }
+          sel.removeAllRanges();
+          done();
+        }
+      });
+    })();
+  </script>
+
+</body>
+</html>
